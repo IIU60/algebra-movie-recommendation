@@ -6,7 +6,7 @@ Instead of treating recommendation as a pure machine-learning black box, the sys
 The repository mainly contains:
 
 - **`data/`**: raw MovieLens CSV files.
-- **`experiments/`**: timestamped experiment folders with solver results, residual curves and metadata.
+- **``**: timestamped experiment folders with solver results, residual curves and metadata.
 - **`README.md`**: this documentation.
 
 > Note: the core solver code and notebooks that generate these experiments live outside this minimal submission directory; this repo focuses on the **numerical results and experiment artefacts**.
@@ -54,9 +54,9 @@ In the experiments, `rating.csv` is transformed into a sparse matrix `A` and a r
 
 ## Experiment Structure
 
-Each experiment run is stored in a timestamped folder under `experiments/`, e.g.:
+Each experiment run is stored in a timestamped folder under ``, e.g.:
 
-- **`experiments/exp_20251216_105921/`**
+- **`exp_20251216_105921/`**
 
 Every experiment folder has the same structure:
 
@@ -86,13 +86,13 @@ This layout makes it easy to:
 
 The **most recent experiment** at the time of this README is:
 
-- **`experiments/exp_20251216_105921/`**
+- **`exp_20251216_105921/`**
 
 Below are the **residual convergence plots** for CG and MINRES using different values of \(\lambda\), taken directly from this folder.
 
 ### Conjugate Gradient Residuals
 
-![Conjugate Gradient residual convergence for different lambdas](experiments/exp_20251216_105921/cg_residuals.png)
+![Conjugate Gradient residual convergence for different lambdas](cg_residuals.png)
 
 **Interpretation (high level):**
 
@@ -102,7 +102,7 @@ Below are the **residual convergence plots** for CG and MINRES using different v
 
 ### MINRES Residuals
 
-![MINRES residual convergence for different lambdas](experiments/exp_20251216_105921/minres_residuals.png)
+![MINRES residual convergence for different lambdas](minres_residuals.png)
 
 **Interpretation (high level):**
 
@@ -136,7 +136,7 @@ While the core solver scripts / notebooks are kept outside this minimal artefact
     - `minres_tol_internal`, `minres_maxiter`.
     - Similar logging infrastructure.
 - **Experiment logging**
-  - Save raw results as `.npz` and `.pkl` into a new timestamped subdirectory under `experiments/`.
+  - Save raw results as `.npz` and `.pkl` into a new timestamped subdirectory under ``.
   - Generate convergence and performance plots as `.png` files.
   - Write a corresponding `metadata.json` capturing configuration and key problem statistics.
 
@@ -145,7 +145,7 @@ If you integrate the external code into this repository, a typical directory lay
 - **`src/`** (or `notebooks/`):
   - **Data preprocessing** (building `A` and `b`).
   - **Solvers** (wrapping CG / MINRES and logging).
-  - **Experiment runner** (or notebook) that produces the folders under `experiments/`.
+  - **Experiment runner** (or notebook) that produces the folders under ``.
 
 ---
 
@@ -162,7 +162,7 @@ To extend this work or reproduce similar experiments:
 - **Connect to recommendation metrics**:
   - Use the solved parameters \(x\) to generate predicted ratings and evaluate using RMSE, MAE or ranking-based metrics (NDCG, MAP) on held-out data.
 
-The existing `experiments/` directory provides a solid baseline of residual behavior for large-scale, regularized linear systems arising from a real recommender dataset.
+The existing `` directory provides a solid baseline of residual behavior for large-scale, regularized linear systems arising from a real recommender dataset.
 
 ---
 
