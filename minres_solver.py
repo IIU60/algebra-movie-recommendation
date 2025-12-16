@@ -81,6 +81,7 @@ def run_minres_for_lambdas(
     lambda_values: Iterable[float],
     tol: float = 1e-10,
     maxiter: int = 500,
+    target_rel: float | None = None,
 ) -> Dict[float, Dict[str, Any]]:
     """Run MINRES on the normal equations for several lambda values.
 
@@ -93,9 +94,16 @@ def run_minres_for_lambdas(
     lambda_values : iterable of float
         Regularization parameters.
     tol : float
-        Relative tolerance passed to SciPy MINRES (rtol).
+        Internal relative tolerance passed to SciPy MINRES (rtol). This should
+        typically be set smaller than any external accuracy target you use for
+        comparing methods.
     maxiter : int
         Maximum number of MINRES iterations.
+    target_rel : float or None
+        Optional external relative residual threshold (||r_k|| / ||r_0||).
+        If provided, the iteration at which this threshold is first crossed
+        is recorded in the results dictionary (but MINRES itself still runs
+        until its own stopping criterion or maxiter).
 
     Returns
     -------
@@ -120,18 +128,32 @@ def run_minres_for_lambdas(
         runtime = time.perf_counter() - start
 
         final_res = float(res_curve[-1]) if len(res_curve) > 0 else float("nan")
-        print(
-            f"[MINRES] λ={lam} finished: iter={iters}, time={runtime:.4f}s, "
-            f"final_res={final_res:.3e}, info={info}"
-        )
 
-        results[lam] = {
+        summary: Dict[str, Any] = {
             "w": w_mr,
             "residuals": res_curve,
             "iterations": iters,
             "time": runtime,
             "info": info,
         }
+
+        # External relative residual comparison target, if requested
+        if target_rel is not None and len(res_curve) > 0:
+            res0 = float(res_curve[0]) if res_curve[0] > 0 else 1.0
+            rel = res_curve / res0
+            below = np.nonzero(rel <= target_rel)[0]
+            if below.size > 0:
+                first_idx = int(below[0])
+                summary["target_rel"] = float(target_rel)
+                summary["target_rel_iter"] = int(first_idx + 1)  # 1-based iteration
+                summary["target_rel_residual"] = float(res_curve[first_idx])
+
+        print(
+            f"[MINRES] λ={lam} finished: iter={iters}, time={runtime:.4f}s, "
+            f"final_res={final_res:.3e}, info={info}"
+        )
+
+        results[lam] = summary
 
     return results
 

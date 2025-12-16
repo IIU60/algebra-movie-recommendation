@@ -5,10 +5,36 @@ These helpers are designed to work with the results dictionaries returned by
 the MINRES and CG drivers.
 """
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 
 import numpy as np
 import matplotlib.pyplot as plt
+
+
+def _lambda_color_map(lams: List[float]) -> Dict[float, str]:
+    """Deterministically assign a color to each lambda.
+
+    This is shared between residual and performance plots so that the same
+    lambda is always rendered with the same color in both figures.
+    """
+    if not lams:
+        return {}
+
+    # Use the current Matplotlib color cycle
+    prop_cycle = plt.rcParams.get("axes.prop_cycle", None)
+    if prop_cycle is not None:
+        colors = prop_cycle.by_key().get("color", [])
+    else:
+        colors = []
+
+    if not colors:
+        # Fallback to default named colors if needed
+        colors = [f"C{i}" for i in range(len(lams))]
+
+    mapping: Dict[float, str] = {}
+    for i, lam in enumerate(sorted(lams)):
+        mapping[lam] = colors[i % len(colors)]
+    return mapping
 
 
 def plot_method_residuals(
@@ -30,11 +56,14 @@ def plot_method_residuals(
     """
     plt.figure(figsize=(8, 5))
 
+    lams = list(results.keys())
+    color_map = _lambda_color_map(lams)
+
     for lam, info in results.items():
         res = np.asarray(info["residuals"], dtype=float)
         if res.size == 0:
             continue
-        plt.plot(res, label=f"λ={lam}")
+        plt.plot(res, label=f"λ={lam}", color=color_map.get(lam))
 
     plt.yscale("log")
     plt.xlabel("Iteration")
@@ -61,11 +90,14 @@ def plot_runtime_and_iterations(
 
     x = np.arange(len(lams))
 
+    color_map = _lambda_color_map(lams)
+    bar_colors = [color_map.get(lam) for lam in lams]
+
     plt.figure(figsize=(10, 4))
 
     # Runtime
     plt.subplot(1, 2, 1)
-    plt.bar(x, times)
+    plt.bar(x, times, color=bar_colors)
     plt.xticks(x, [f"λ={lam}" for lam in lams])
     plt.ylabel("Runtime (seconds)")
     plt.title(f"{method_name} Runtime Comparison")
@@ -73,7 +105,7 @@ def plot_runtime_and_iterations(
 
     # Iterations
     plt.subplot(1, 2, 2)
-    plt.bar(x, iters)
+    plt.bar(x, iters, color=bar_colors)
     plt.xticks(x, [f"λ={lam}" for lam in lams])
     plt.ylabel("Iterations")
     plt.title(f"{method_name} Iteration Count Comparison")

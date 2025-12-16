@@ -60,12 +60,17 @@ def save_results_dict(
 def main() -> None:
     # Configuration
     csv_path = "data/rating.csv"
-    lambda_values: List[float] = [0.0, 0.1, 1.0]
+    lambda_values: List[float] = [0.0, 0.1, 1.0, 5]
 
-    minres_tol = 1e-10
+    # External comparison tolerance: both methods are measured against this
+    # relative residual level ||r_k|| / ||r_0|| <= target_rel.
+    target_rel = 1e-4
+
+    # Internal solver tolerances (set tighter than target_rel)
+    minres_tol_internal = 1e-10
     minres_maxiter = 500
 
-    cg_tol = 1e-4
+    cg_internal_tol = 1e-8
     cg_maxiter = 500
 
     print("Building design matrix and RHS from ratings data...")
@@ -81,8 +86,9 @@ def main() -> None:
         A_design,
         b,
         lambda_values=lambda_values,
-        tol=minres_tol,
+        tol=minres_tol_internal,
         maxiter=minres_maxiter,
+        target_rel=target_rel,
     )
 
     # Run CG
@@ -91,8 +97,9 @@ def main() -> None:
         A_design,
         b,
         lambda_values=lambda_values,
-        tol=cg_tol,
+        target_rel=target_rel,
         max_iter=cg_maxiter,
+        internal_tol=cg_internal_tol,
     )
 
     # Plot residual convergence
@@ -141,9 +148,10 @@ def main() -> None:
     meta = {
         "csv_path": csv_path,
         "lambda_values": lambda_values,
-        "minres_tol": minres_tol,
+        "target_rel": target_rel,
+        "minres_tol_internal": minres_tol_internal,
         "minres_maxiter": minres_maxiter,
-        "cg_tol": cg_tol,
+        "cg_internal_tol": cg_internal_tol,
         "cg_maxiter": cg_maxiter,
         "A_shape": A_design.shape,
         "A_nnz": int(A_design.nnz),
